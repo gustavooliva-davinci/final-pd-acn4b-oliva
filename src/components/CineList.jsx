@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import peliculasData from "../peliculas.json";
+import CineItem from "./CineItem";
 
 function CineList() {
   
@@ -11,18 +12,11 @@ function CineList() {
     }, []);
 
     return (
-        <div>
-            <h2>Listado de Películas</h2>
-
-            <ul>
-                {peliculas.map((peli) => (
-                    <li key={peli.id}>
-                        {peli.titulo} ({peli.anio}) - {peli.genero}
-                    </li>
-                ))}
-            </ul>
-            
-        </div>
+        <div className="cine-list">
+            {peliculas.map((peli) => (
+                <CineItem key={peli.id} pelicula={peli}/>
+            ))}
+        </div> 
     );
 }
 
