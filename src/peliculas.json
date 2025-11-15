@@ -3,18 +3,21 @@
         "id": 501, 
         "titulo": "Scott Pilgrim vs The World", 
         "anio": 2014, 
-        "genero": "Ciencia ficción" 
+        "genero": "Ciencia ficción",
+        "imagen": "/imagenes/scott_pilgrim.jpg" 
     }, 
     { 
         "id": 502, 
         "titulo": "Duro de Matar 4", 
         "anio": 2008, 
-        "genero": "Acción" 
+        "genero": "Acción",
+        "imagen": "/imagenes/duro_de_matar_4.jpg" 
     }, 
     { 
         "id": 503, 
         "titulo": "Advengers End Game", 
         "anio": 2022, 
-        "genero": "Ciencia ficción" 
+        "genero": "Ciencia ficción",
+        "imagen": "/imagenes/advengers_end_game.jpg"  
     } 
 ]
