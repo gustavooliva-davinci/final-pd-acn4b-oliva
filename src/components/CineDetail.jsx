@@ -1,19 +1,40 @@
 import { useParams, Link } from "react-router-dom";
-import peliculasData from "../peliculas.json";
+import { useState, useEffect } from "react";
 import "../styles/cine.css";
 
 function CineDetail() {
-    
     const { id } = useParams();
-    const pelicula = peliculasData.find((p) => p.id === parseInt(id));
+    const [pelicula, setPelicula] = useState(null);
+    const [cargando, setCargando] = useState(true);
+
+    useEffect(() => {
+        const cargarPelicula = async () => {
+            try {
+                const res = await fetch(`http://localhost:3000/api/peliculas/${id}`);
+                const data = await res.json();
+
+                if (data.error){
+                    setPelicula(null);
+                } else {
+                    setPelicula(data);
+                }
+            } catch (error){
+                console.error("Error al cargar la pelicula: ", error);
+            } finally {
+                setCargando(false);
+            }
+        };
+
+        cargarPelicula();
+    }, [id]);
+
+    if (cargando) return <p>Cargando...</p>;
 
     if (!pelicula) {
         return (
             <div style={{ textAlign: "center", marginTop: "50px" }}>
-                <h2>Pelicula no encontrada</h2>
-                <Link to="/cine" className="volver-btn">
-                    Volver al Catalogo
-                </Link>
+                <h2>Película no encontrada</h2>
+                <Link to="/" className="volver-btn">Volver</Link>
             </div>
         );
     }
@@ -24,15 +45,13 @@ function CineDetail() {
 
             <div className="detail-info">
                 <h1>{pelicula.titulo}</h1>
-                <p><strong>Genero:</strong> {pelicula.genero} </p>
-                <p><strong>Año</strong> {pelicula.anio} </p>
+                <p><strong>Genero:</strong> {pelicula.genero}</p>
+                <p><strong>Año:</strong> {pelicula.anio}</p>
                 <p><strong>Descripcion:</strong></p>
-                <p> {pelicula.descripcion} </p>
+                <p>{pelicula.descripcion}</p>
 
                 <br />
-                <Link to="/cine" className="volver-btn">
-                    Volver
-                </Link>
+                <Link to="/" className="volver-btn">Volver</Link>
             </div>
         </div>
     );
