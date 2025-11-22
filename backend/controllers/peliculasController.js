@@ -1,130 +1,122 @@
-import { error } from "console";
-import fs from "fs";
-import { v4 as uuid } from "uuid";
+const { error } = require("console");
+const fs = require("fs");
+const path = require("path");
 
-const DATA_PATH = "./data/peliculas.json";
+// Ruta del archivo de peliculas
+const filePath = path.join(__dirname, '../data/peliculas.json');
 
-// Leer peliculas JSON
-function leerPeliculas() {
-    const data = fs.readFileSync(DATA_PATH, "utf8");
-    const peliculas = JSON.parse(data);
+// Leer archivo JSON
+const leerPeliculas = async () => {
+    try {
+        const data = await fs.readFile(filePath, 'utf8');
+        return JSON.parse(data);
+    } catch (error){
+        return [];
+    }
+};
 
-    return peliculas.map(p => ({ ...p, id: String(p.id) }));
-}
+// Escribir archivo JSON
+const escribirPeliculas = async (peliculas) => {
+    await fs.writeFile(filePath, JSON.stringify(peliculas, null, 2), 'utf8');
+};
 
-// Guardar peliculas JSON
-function guardarPeliculas(peliculas) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(peliculas, null, 2));
-}
-
+// -- ENDPOINTS --
 // GET - todas las peliculas
-export function getPeliculas(req, res) {
-    res.json(leerPeliculas());
-}
+const obtenerPeliculas = async (req, res) => {
+    try {
+        const peliculas = await leerPeliculas();
+        res.status(200).json(peliculas);
+    } catch (error){
+        res.status(500).json({ error: "Error al obtener las peliculas" });
+    }
+};
 
 // GET - pelicula por id
-export function getPeliculaById(req, res) {
-    const id = String(req.params.id);
-    const peliculas = leerPeliculas();
-    const peli = peliculas.find(p => p.id === id);
+const obtenerPeliculaPorId = async (req, res) => {
+    try {
+        const id = parseInt(req.params.id);
+        const peliculas = await leerPeliculas();
+        const pelicula = peliculas.find(p => p.id === id);
 
-    if (!peli) {
-        return res.status(404).json({ error: "Pelicula no encontrada" });
+        if (pelicula){
+            res.status(200).json(pelicula);
+        } else {
+            res.status(404).json({ error: "Pelicula no encontrada" });
+        }
+    } catch (error){
+        res.status(500).json({ error: "Error al obtener la pelicula" });
     }
-
-    res.json(peli);
-}
+};
 
 // POST - agregar pelicula
-export function addPelicula(req, res) {
-    const { titulo, genero, anio, descripcion, imagen} = req.body;
-
-    if (!titulo || !genero || !anio || !descripcion || !imagen) {
-        return res.status(400).json({ 
-            error: "Datos incompletos" 
-        });
-    }
-
-    if (isNaN(anio)) {
-        return res.status(400).json({
-            error: "El año debe ser numerico"
-        })
-    }
-
-    const peliculas = leerPeliculas();
-
-    const nuevaPelicula = {
-        id: uuid(),
-        titulo,
-        genero,
-        anio,
-        descripcion,
-        imagen
-    };
+const agregarPelicula = async (req, res) => {
+    const nuevaPelicula = req.body;
     
-    peliculas.push(nuevaPelicula);
-    guardarPeliculas(peliculas);
+    try {
+        const peliculas = await leerPeliculas();
+        // Tomar el ultimo ID y sumar 1
+        const newId = peliculas.length > 0 ? Math.max(...peliculas.map(p => p.id)) + 1 : 1;
 
-    res.json({
-        mensaje: "Pelicula agregada correctamente",
-        pelicula: nuevaPelicula
-    });
-}
+        const peliculaConId = {
+            id: newId,
+            ...nuevaPelicula,
+            imagen: nuevaPelicula.imagen || 'ruta/a/imagen_por_defecto.jpg'
+        };
 
-// DELETE - eliminar pelicula
-export function deletePelicula(req, res) {
-    const id = String(req.params.id);
-    const peliculas = leerPeliculas();
-
-    const nuevas = peliculas.filter(p => p.id !== id);
-
-    if (nuevas.length === peliculas.length) {
-        return res.status(404).json({ 
-            error: "Pelicula no encontrada" 
-        });
+        peliculas.push(peliculaConId);
+        await escribirPeliculas(peliculas);
+        res.status(201).json(peliculaConId); // Se devuelve la pelicula agregada
+    } catch (error){
+        res.status(500).json({ error: "Error al agregar la pelicula" });
     }
-
-    guardarPeliculas(nuevas);
-    res.json({ mensaje: "Pelicula eliminada" });
-}
+};
 
 // UPDATE - actualizar pelicula
-export function updatePelicula (req, res){
-    const id = String(req.params.id);
-    const peliculas = leerPeliculas();
+const actualizarPelicula = async (req, res) => {
+    const id = parseInt(req.params.id);
+    const datosActualizados = req.body;
 
-    const index = peliculas.findIndex(p => p.id === id);
+    try {
+        let peliculas = await leerPeliculas();
+        const index = peliculas.findIndex(p => p.id === id);
 
-    if (index === -1) {
-        return res.status(404).json({ 
-            mensaje: "Pelicula no encontrada" 
-        });
+        if (index === -1){
+            return res.status(404).json({ error: 'Película no encontrada para actualizar' });
+        }
+
+        peliculas[index] = { ...peliculas[index], ...datosActualizados };
+        await escribirPeliculas(peliculas);
+        res.status(200).json(peliculas[index]); // Devuelve la peli actualizada
+    } catch (error){
+        res.status(500).json({ error: "Error al actualizar la pelicula" });
     }
+};
 
-    const { titulo, genero, anio, descripcion, imagen } = req.body;
+// DELETE - eliminar pelicula
+const eliminarPelicula = async (req, res) => {
+    const id = parseInt(req.params.id);
 
-    // Validacion
-    if (!titulo || !genero || !anio || !descripcion || !imagen) {
-        return res.status(400).json({
-            error: "Todos los campos son obligatorios"
-        });
+    try {
+        let peliculas = await leerPeliculas();
+        const initialLength = peliculas.length;
+
+        peliculas = peliculas.filter(p => p.id !== id);
+
+        if (peliculas.length === initialLength){
+            return res.status(404).json({ error: "Pelicula no encontrada para eliminar" });
+        }
+
+        await escribirPeliculas(peliculas);
+        res.status(200).json({ mensaje: "Pelicula con ID ${id} eliminada correctamente" });
+    } catch (error) {
+        res.status(500).json({ error: "Error al eliminar la pelicula" });
     }
+};
 
-    if (isNaN(anio)){
-        return res.status(400).json({
-            error: "El año debe ser numerico"
-        });
-    }
-
-    peliculas[index] = {
-        ...peliculas[index],
-        titulo,
-        genero,
-        anio,
-        descripcion,
-        imagen
-    };
-
-    guardarPeliculas(peliculas);
-    res.json({ mensaje: "Pelicula actualizada correctamente" });
+module.exports = {
+    obtenerPeliculas,
+    obtenerPeliculaPorId,
+    agregarPelicula,
+    actualizarPelicula,
+    eliminarPelicula
 };

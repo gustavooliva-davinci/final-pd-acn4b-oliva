@@ -226,3 +226,67 @@
   transform: scale(0.96);
   box-shadow: 0 0 10px rgba(255, 80, 80, 0.55);
 }
+
+/* Edicion */
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 500px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #34495e;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    border: 2px solid #ffda79;
+}
+
+.edit-form input,
+.edit-form textarea {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.edit-form button {
+    margin: 5px 0;
+}
+
+/* Estilos para Mensajes Dinamicos */
+.mensaje-dinamico {
+    padding: 15px 25px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: bold;
+    margin: 15px auto;
+    width: fit-content;
+    max-width: 90%;
+    transition: opacity 0.5s ease-out;
+}
+
+.mensaje-dinamico.success {
+    background-color: #27ae60;
+    color: white;
+    box-shadow: 0 0 15px rgba(39, 174, 96, 0.5);
+}
+
+.mensaje-dinamico.error {
+    background-color: #e74c3c;
+    color: white;
+    box-shadow: 0 0 15px rgba(231, 76, 60, 0.5);
+}
+
+.card-actions {
+    display: flex;
+    flex-direction: column;
+    padding: 0 10px 10px;
+    gap: 8px;
+}
+
+.card-actions .volver-btn {
+    margin: 0;
+    text-align: center;
+}

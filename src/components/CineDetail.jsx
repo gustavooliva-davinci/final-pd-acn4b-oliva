@@ -1,83 +1,79 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
+import usePeliculas from "../hooks/usePeliculas";
 import "../styles/cine.css";
 
 function CineDetail() {
     const { id } = useParams();
-    const [pelicula, setPelicula] = useState(null);
-    const [cargando, setCargando] = useState(true);
+    const { obtenerPeliculaPorId, eliminarPelicula } = usePeliculas();
     const navigate = useNavigate();
     
+    const [pelicula, setPelicula] = useState(null);
+    const [cargando, setCargando] = useState(true);
+
     // Eliminar pelicula
-    const eliminarPelicula = async () => {
-        if (!window.confirm("¿Seguro que queres eliminar la pelicula?")) return;
+    const handleEliminarPelicula = async () => {
+        if (!window.confirm("Seguro que queres eliminar la pelicula?")) return;
 
-        try {
-            const response = await fetch(`http://localhost:3000/api/peliculas/${id}`, {
-                method: "DELETE",
-            });
+        const idNumerico = parseInt(id);
 
-            if (response.ok){
-                alert("Película eliminada con éxito");
-                navigate("/");
-            } else {
-                alert("Error al eliminar la película");
-            }
-        } catch (error) {
-            console.error(error);
-            alert("Hubo un problema con el servidor");
+        const resultado = await eliminarPelicula(idNumerico);
+
+        if (resultado.exito){
+            alert(resultado.mensaje);
+            navigate("/"); // Devolver la lista despues de eliminar
+        } else {
+            alert(resultado.mensaje);
         }
     };
 
     useEffect(() => {
-        const cargarPelicula = async () => {
-            try {
-                const res = await fetch(`http://localhost:3000/api/peliculas/${id}`);
-                const data = await res.json();
-
-                if (data.error){
-                    setPelicula(null);
-                } else {
-                    setPelicula(data);
-                }
-            } catch (error){
-                console.error("Error al cargar la pelicula: ", error);
-            } finally {
-                setCargando(false);
+        const cargarDetalle = async () => {
+            setCargando(true);
+            const peliculaData = await obtenerPeliculaPorId(id);
+            
+            if (peliculaData){
+                setPelicula(peliculaData);
+            } else {
+                setPelicula(null);
             }
+
+            setCargando(false);
         };
 
-        cargarPelicula();
-    }, [id]);
+        cargarDetalle();
+    }, [id, obtenerPeliculaPorId]);
 
     if (cargando) return <p>Cargando...</p>;
 
     if (!pelicula) {
         return (
             <div style={{ textAlign: "center", marginTop: "50px" }}>
-                <h2>Película no encontrada</h2>
-                <Link to="/" className="volver-btn">Volver</Link>
+                <h2>Pelicula no encontrada</h2>
+                <Link to="/" className="volver-btn">Volver al Listado</Link>
             </div>
         );
     }
 
+    // render
     return (
         <div className="detail-container">
             <img className="detail-image" src={pelicula.imagen} alt={pelicula.titulo} />
 
             <div className="detail-info">
                 <h1>{pelicula.titulo}</h1>
+                <p><strong>ID:</strong> {pelicula.id}</p>
                 <p><strong>Genero:</strong> {pelicula.genero}</p>
                 <p><strong>Año:</strong> {pelicula.anio}</p>
                 <p><strong>Descripcion:</strong></p>
                 <p>{pelicula.descripcion}</p>
 
                 <br />
-                <button className="edit-btn" onClick={() => alert("Edición disponible solo en la pantalla principal")}>
+                <button className="edit-btn" onClick={() => navigate("/")} style={{ marginRight: '10px' }}>
                     Editar pelicula
                 </button>
 
-                <button className="delete-btn" onClick={eliminarPelicula} style={{ background: "red", color: "white" }}>
+                <button className="delete-btn" onClick={handleEliminarPelicula} style={{ background: "red", color: "white" }}>
                     Eliminar pelicula
                 </button>
                 
