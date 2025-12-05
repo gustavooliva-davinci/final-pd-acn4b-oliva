@@ -1,21 +1,38 @@
-body { 
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif; 
-    background: linear-gradient(135deg, #141e30, #243b55); 
-    color: #fff; 
-    margin: 0; 
-    padding: 20px; 
-    min-height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-} 
+body {
+  font-family: 'Inter', sans-serif;
+  background: #080808;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-h1 { 
-    text-align: center; 
-    margin-bottom: 25px; 
-    font-size: 2.5rem; 
-    font-weight: bold; 
-    color: #ffda79; 
-    text-shadow: 2px 2px 12px rgba(0, 0, 0, 0.7); 
-    animation: fadeInDown 0.8s ease; 
-} 
+h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 3.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 
+    0 0 5px rgba(255, 255, 255, 0.8),
+    0 0 20px rgba(220, 20, 60, 0.6),
+    0 0 40px rgba(220, 20, 60, 0.4);
+  animation: flicker 3s infinite alternate;
+}
+
+@keyframes flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    opacity: 1;
+    text-shadow: 
+      0 0 5px rgba(255, 255, 255, 0.8),
+      0 0 20px rgba(220, 20, 60, 0.6);
+  }
+  20%, 24%, 55% {
+    opacity: 0.9;
+    text-shadow: none;
+  }
+}
