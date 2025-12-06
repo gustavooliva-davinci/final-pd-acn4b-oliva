@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import usePeliculas from "../hooks/usePeliculas";
+import { usePeliculas } from '../hooks/usePeliculas.js';
 import "../styles/cine.css";
 import CineEditForm from "./CineEditForm"; 
 

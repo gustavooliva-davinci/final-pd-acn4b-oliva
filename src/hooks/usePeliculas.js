@@ -1,139 +1,132 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 
-const API_URL = "http://localhost:3000/api/peliculas";
+const API_URL = 'http://localhost:3000/peliculas'; 
 
-const usePeliculas = () => {
+export const usePeliculas = () => {
     const [peliculas, setPeliculas] = useState([]);
     const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState(null);
 
-    // Obtener todas las peliculas
-    const cargarPeliculas = useCallback(async () => {
-        setCargando(true);
-        setError(null);
-
+    // GET - todas las peliculas
+    const obtenerPeliculas = async () => {
         try {
-            const res = await fetch(API_URL);
-
-            if (!res.ok) {
-                throw new Error("Fallo la carga de lista de peliculas.");
-            }
-
+            const res = await fetch(API_URL); 
             const data = await res.json();
+            
+            if (!res.ok) {
+                throw new Error(data.error || res.statusText);
+            }
+            
             setPeliculas(data);
-        } catch (err) {
-            setError(err.message);
-            console.error("Error al carga peliculas:", err);
-        } finally {
+            setCargando(false);
+        } catch (error) { 
+            console.error("Error al obtener películas:", error);
             setCargando(false);
         }
-    }, []);
-
-    useEffect(() => {
-        cargarPeliculas();
-    }, [cargarPeliculas]);
-
-    // Obtener pelicula por ID
-    const obtenerPeliculaPorId = useCallback(async (id) => {
+    };
+    
+    // GET - pelicula por ID
+    const obtenerPeliculaPorId = async (id) => {
         try {
-            const res = await fetch(`${API_URL}/${id}`);
+            const res = await fetch(`${API_URL}/${id}`); 
             const data = await res.json();
-
-            if (data.error){
-                return null;
+            
+            if (!res.ok) {
+                throw new Error(data.error || res.statusText);
             }
-
+            
             return data;
-        } catch (err){
-            console.error("Error al obtener la pelicula por ID:", err);
+        } catch (error) {
+            console.error(`Error al obtener detalle de película con ID ${id}:`, error);
             return null;
         }
-    },[]);
+    };
 
-    // Agregar una pelicula
-    const agregarPelicula = async (nuevaPelicula) => {
+
+    // POST - agregar pelicula
+    const agregarPelicula = async (pelicula) => {
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(nuevaPelicula)
+                body: JSON.stringify(pelicula)
             });
 
             const data = await res.json();
-
-            if (data.error) {
-                throw new Error(data.error);
+            
+            if (!res.ok) {
+                 throw new Error(data.error || res.statusText);
             }
 
-            // Actualiza el estado localmente
             setPeliculas(prev => [...prev, data]); 
-            return { exito: true, mensaje: "Pelicula agregada correctamente." };
+            return { exito: true, mensaje: "Película agregada correctamente." };
 
-        } catch (err) {
-            console.error("Error al agregar pelicula:", err);
-            return { exito: false, mensaje: err.message || "Error al agregar la pelicula." };
+        } catch (error) {
+            console.error("Error al agregar película:", error);
+            return { exito: false, mensaje: error.message || "Error al agregar la película." };
         }
     };
     
-    // Eliminar una película
+    // DELETE - Eliminar pelicula
     const eliminarPelicula = async (id) => {
         try {
-            const res = await fetch(`${API_URL}/${id}`, {
+            const res = await fetch(`${API_URL}/${id}`, { 
                 method: "DELETE"
+            });
+            
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || res.statusText);
+            }
+
+            setPeliculas(prev => prev.filter(p => p.id !== id));
+            return { exito: true, mensaje: "Película eliminada correctamente." };
+
+        } catch (error) {
+            console.error("Error al eliminar película:", error);
+            return { exito: false, mensaje: error.message || "Error al eliminar la película." };
+        }
+    };
+    
+    // --- 5. PUT (Actualizar) ---
+    const actualizarPelicula = async (id, peliculaActualizada) => {
+        try {
+            const res = await fetch(`${API_URL}/${id}`, { 
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(peliculaActualizada)
             });
 
             const data = await res.json();
 
             if (!res.ok) {
-                throw new Error(data.error || "Fallo al realizar la eliminacion");
+                 throw new Error(data.error || res.statusText);
             }
-
-            setPeliculas(prev => prev.filter(p => p.id !== id));
-            return { exito: true, mensaje: "Pelicula eliminada correctamente." };
-
-        } catch (err) {
-            console.error("Error al eliminar la película:", err);
-            return { exito: false, mensaje: err.message || "Error al eliminar la pelicula." };
-        }
-    };
-
-    // Actualizar una pelicula
-    const actualizarPelicula = async (id, datosActualizados) => {
-        try {
-            const res = await fetch(`${API_URL}/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(datosActualizados)
-            });
             
-            const data = await res.json();
+            // Reemplaza la pelicula en el estado local
+            setPeliculas(prev => prev.map(p => 
+                p.id === id ? data.pelicula : p 
+            ));
+            
+            return { exito: true, mensaje: "Película actualizada correctamente." };
 
-            if (data.error) {
-                throw new Error(data.error);
-            }
-
-            // Actualizamos la lista
-            setPeliculas(prev => 
-                prev.map(p => (p.id === id ? { ...p, ...datosActualizados, id: id } : p))
-            );
-            return { exito: true, mensaje: "Pelicula actualizada correctamente." };
-
-        } catch (err) {
-            console.error("Error al actualizar la pelicula:", err);
-            return { exito: false, mensaje: err.message || "Error al actualizar la pelicula." };
+        } catch (error) { 
+            console.error("Error al actualizar película:", error);
+            return { exito: false, mensaje: error.message || "Error al actualizar la película." };
         }
     };
 
-    return {
-        peliculas,
-        cargando,
-        error,
-        cargarPeliculas,
+
+    useEffect(() => {
+        obtenerPeliculas();
+    }, []);
+
+    return { 
+        peliculas, 
+        cargando, 
+        obtenerPeliculas, 
         obtenerPeliculaPorId,
         agregarPelicula,
         eliminarPelicula,
-        actualizarPelicula,
+        actualizarPelicula
     };
 };
-
-export default usePeliculas;

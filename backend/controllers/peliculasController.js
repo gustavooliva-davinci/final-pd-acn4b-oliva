@@ -1,119 +1,91 @@
-const { error } = require("console");
-const fs = require("fs");
-const path = require("path");
+import db from '../db/database.js'; 
 
-// Ruta del archivo de peliculas
-const filePath = path.join(__dirname, '../data/peliculas.json');
-
-// Leer archivo JSON
-const leerPeliculas = async () => {
-    try {
-        const data = await fs.readFile(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error){
-        return [];
-    }
-};
-
-// Escribir archivo JSON
-const escribirPeliculas = async (peliculas) => {
-    await fs.writeFile(filePath, JSON.stringify(peliculas, null, 2), 'utf8');
-};
-
-// -- ENDPOINTS --
-// GET - todas las peliculas
+// GET: todas las peliculasa
 const obtenerPeliculas = async (req, res) => {
-    try {
-        const peliculas = await leerPeliculas();
-        res.status(200).json(peliculas);
-    } catch (error){
-        res.status(500).json({ error: "Error al obtener las peliculas" });
-    }
-};
-
-// GET - pelicula por id
-const obtenerPeliculaPorId = async (req, res) => {
-    try {
-        const id = parseInt(req.params.id);
-        const peliculas = await leerPeliculas();
-        const pelicula = peliculas.find(p => p.id === id);
-
-        if (pelicula){
-            res.status(200).json(pelicula);
-        } else {
-            res.status(404).json({ error: "Pelicula no encontrada" });
-        }
-    } catch (error){
-        res.status(500).json({ error: "Error al obtener la pelicula" });
-    }
-};
-
-// POST - agregar pelicula
-const agregarPelicula = async (req, res) => {
-    const nuevaPelicula = req.body;
+    const sql = 'SELECT * FROM peliculas';
     
-    try {
-        const peliculas = await leerPeliculas();
-        // Tomar el ultimo ID y sumar 1
-        const newId = peliculas.length > 0 ? Math.max(...peliculas.map(p => p.id)) + 1 : 1;
-
-        const peliculaConId = {
-            id: newId,
-            ...nuevaPelicula,
-            imagen: nuevaPelicula.imagen || 'ruta/a/imagen_por_defecto.jpg'
-        };
-
-        peliculas.push(peliculaConId);
-        await escribirPeliculas(peliculas);
-        res.status(201).json(peliculaConId); // Se devuelve la pelicula agregada
-    } catch (error){
-        res.status(500).json({ error: "Error al agregar la pelicula" });
-    }
+    db.all(sql, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.json(rows);
+    });
 };
 
-// UPDATE - actualizar pelicula
+// GET: pelicula por id
+const obtenerPeliculaPorId = async (req, res) => {
+    const { id } = req.params;
+    const sql = 'SELECT * FROM peliculas WHERE id = ?';
+
+    db.get(sql, [id], (err, row) => {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        if (!row) {
+            return res.status(404).json({ error: "Película no encontrada" });
+        }
+        res.json(row);
+    });
+};
+
+// POST: agregar pelicula
+const agregarPelicula = async (req, res) => {
+    const { titulo, descripcion, anio, genero, imagen } = req.body;
+    const sql = `INSERT INTO peliculas (titulo, descripcion, anio, genero, imagen) VALUES (?, ?, ?, ?, ?)`;
+
+    db.run(sql, [titulo, descripcion, anio, genero, imagen], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
+        }
+        res.status(201).json({
+            id: this.lastID,
+            titulo,
+            descripcion,
+            anio,
+            genero,
+            imagen
+        });
+    });
+};
+
+// PUT: Actualizar / editar
 const actualizarPelicula = async (req, res) => {
-    const id = parseInt(req.params.id);
-    const datosActualizados = req.body;
+    const { id } = req.params;
+    const { titulo, descripcion, anio, genero, imagen } = req.body;
+    
+    const sql = `UPDATE peliculas SET titulo = ?, descripcion = ?, anio = ?, genero = ?, imagen = ? WHERE id = ?`;
 
-    try {
-        let peliculas = await leerPeliculas();
-        const index = peliculas.findIndex(p => p.id === id);
-
-        if (index === -1){
-            return res.status(404).json({ error: 'Película no encontrada para actualizar' });
+    db.run(sql, [titulo, descripcion, anio, genero, imagen, id], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
         }
-
-        peliculas[index] = { ...peliculas[index], ...datosActualizados };
-        await escribirPeliculas(peliculas);
-        res.status(200).json(peliculas[index]); // Devuelve la peli actualizada
-    } catch (error){
-        res.status(500).json({ error: "Error al actualizar la pelicula" });
-    }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: "Película no encontrada para actualizar" });
+        }
+        res.json({ 
+            mensaje: "Película actualizada", 
+            pelicula: { id, titulo, descripcion, anio, genero, imagen } 
+        });
+    });
 };
 
-// DELETE - eliminar pelicula
+// DELETE: Eliminar
 const eliminarPelicula = async (req, res) => {
-    const id = parseInt(req.params.id);
+    const { id } = req.params;
+    const sql = 'DELETE FROM peliculas WHERE id = ?';
 
-    try {
-        let peliculas = await leerPeliculas();
-        const initialLength = peliculas.length;
-
-        peliculas = peliculas.filter(p => p.id !== id);
-
-        if (peliculas.length === initialLength){
-            return res.status(404).json({ error: "Pelicula no encontrada para eliminar" });
+    db.run(sql, [id], function(err) {
+        if (err) {
+            return res.status(500).json({ error: err.message });
         }
-
-        await escribirPeliculas(peliculas);
-        res.status(200).json({ mensaje: "Pelicula con ID ${id} eliminada correctamente" });
-    } catch (error) {
-        res.status(500).json({ error: "Error al eliminar la pelicula" });
-    }
+        if (this.changes === 0) {
+            return res.status(404).json({ error: "Película no encontrada para eliminar" });
+        }
+        res.json({ mensaje: "Película eliminada correctamente", exito: true });
+    });
 };
 
-module.exports = {
+export {
     obtenerPeliculas,
     obtenerPeliculaPorId,
     agregarPelicula,

@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
-import usePeliculas from "../hooks/usePeliculas";
+import { usePeliculas } from '../hooks/usePeliculas.js';
 import "../styles/cine.css";
 
 function CineDetail() {
