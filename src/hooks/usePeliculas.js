@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 const API_URL = 'http://localhost:3000/peliculas'; 
 
@@ -7,7 +7,7 @@ export const usePeliculas = () => {
     const [cargando, setCargando] = useState(true);
 
     // GET - todas las peliculas
-    const obtenerPeliculas = async () => {
+    const obtenerPeliculas = useCallback( async () => {
         try {
             const res = await fetch(API_URL); 
             const data = await res.json();
@@ -22,10 +22,10 @@ export const usePeliculas = () => {
             console.error("Error al obtener películas:", error);
             setCargando(false);
         }
-    };
+    }, []);
     
     // GET - pelicula por ID
-    const obtenerPeliculaPorId = async (id) => {
+    const obtenerPeliculaPorId = useCallback( async (id) => {
         try {
             const res = await fetch(`${API_URL}/${id}`); 
             const data = await res.json();
@@ -39,11 +39,11 @@ export const usePeliculas = () => {
             console.error(`Error al obtener detalle de película con ID ${id}:`, error);
             return null;
         }
-    };
+    }, []);
 
 
     // POST - agregar pelicula
-    const agregarPelicula = async (pelicula) => {
+    const agregarPelicula = useCallback( async (pelicula) => {
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
@@ -64,10 +64,10 @@ export const usePeliculas = () => {
             console.error("Error al agregar película:", error);
             return { exito: false, mensaje: error.message || "Error al agregar la película." };
         }
-    };
+    }, []);
     
     // DELETE - Eliminar pelicula
-    const eliminarPelicula = async (id) => {
+    const eliminarPelicula = useCallback( async (id) => {
         try {
             const res = await fetch(`${API_URL}/${id}`, { 
                 method: "DELETE"
@@ -85,10 +85,10 @@ export const usePeliculas = () => {
             console.error("Error al eliminar película:", error);
             return { exito: false, mensaje: error.message || "Error al eliminar la película." };
         }
-    };
+    }, []);
     
     // --- 5. PUT (Actualizar) ---
-    const actualizarPelicula = async (id, peliculaActualizada) => {
+    const actualizarPelicula = useCallback( async (id, peliculaActualizada) => {
         try {
             const res = await fetch(`${API_URL}/${id}`, { 
                 method: "PUT",
@@ -113,7 +113,7 @@ export const usePeliculas = () => {
             console.error("Error al actualizar película:", error);
             return { exito: false, mensaje: error.message || "Error al actualizar la película." };
         }
-    };
+    }, []);
 
 
     useEffect(() => {

@@ -1,6 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { usePeliculas } from '../hooks/usePeliculas.js';
+import ReservaModal from "./ReservaModal.jsx";
 import "../styles/cine.css";
 
 function CineDetail() {
@@ -9,7 +10,12 @@ function CineDetail() {
     const navigate = useNavigate();
     
     const [pelicula, setPelicula] = useState(null);
-    const [cargando, setCargando] = useState(true);
+    const [cargandoDetalle, setCargandoDetalle] = useState(true);
+
+    // Implementacion de modal de reserva
+    const [modalAbierto, setModalAbierto] = useState(false);
+    const abrirModal = () => setModalAbierto(true);
+    const cerrarModal = () => setModalAbierto(false);
 
     // Eliminar pelicula
     const handleEliminarPelicula = async () => {
@@ -28,23 +34,23 @@ function CineDetail() {
     };
 
     useEffect(() => {
-        const cargarDetalle = async () => {
-            setCargando(true);
-            const peliculaData = await obtenerPeliculaPorId(id);
+        const fetchDetalle = async () => {
+            setCargandoDetalle(true);
+            const data = await obtenerPeliculaPorId(id);
             
-            if (peliculaData){
-                setPelicula(peliculaData);
+            if (data){
+                setPelicula(data);
             } else {
                 setPelicula(null);
             }
 
-            setCargando(false);
+            setCargandoDetalle(false);
         };
 
-        cargarDetalle();
+        fetchDetalle();
     }, [id, obtenerPeliculaPorId]);
 
-    if (cargando) return <p>Cargando...</p>;
+    if (cargandoDetalle) return <p>Cargando...</p>;
 
     if (!pelicula) {
         return (
@@ -77,6 +83,16 @@ function CineDetail() {
                     Eliminar pelicula
                 </button>
                 
+                <button type="button" onClick={abrirModal} className="neon-submit-btn">
+                    Reservar Entradas
+                </button>
+            
+                <ReservaModal
+                    pelicula={pelicula}
+                    isOpen={modalAbierto}
+                    onClose={cerrarModal}
+                />
+
                 <br />
                 <Link to="/" className="volver-btn">Volver</Link>
             </div>

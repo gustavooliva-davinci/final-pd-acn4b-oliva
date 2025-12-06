@@ -120,7 +120,7 @@ function CineList() {
                 <textarea
                     name="imagen"
                     placeholder="URL de la imagen (click derecho y seleccionar la opción 'Copiar dirección de la imagen')*"
-                    rows="3" // Define la altura mínima a una fila
+                    rows="3" 
                     value={form.imagen}
                     onChange={handleChange}
                 />
@@ -140,7 +140,7 @@ function CineList() {
                 <CineEditForm 
                     peliculaEditar={peliculaEditar}
                     setPeliculaEditar={setPeliculaEditar}
-                    actualizarPelicula={actualizarPelicula} // Pasamos la función del hook
+                    actualizarPelicula={actualizarPelicula} 
                     setMensajeExito={setMensajeExito}
                     setMensajeError={setMensajeError}
                 />
