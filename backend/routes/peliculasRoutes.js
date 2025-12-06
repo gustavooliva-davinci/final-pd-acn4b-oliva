@@ -1,5 +1,4 @@
 import express from 'express';
-const router = express.Router();
 import { 
     obtenerPeliculas, 
     obtenerPeliculaPorId, 
@@ -7,6 +6,8 @@ import {
     actualizarPelicula, 
     eliminarPelicula 
 } from '../controllers/peliculasController.js'; 
+
+const router = express.Router();
 
 // Rutas
 router.get('/', obtenerPeliculas);

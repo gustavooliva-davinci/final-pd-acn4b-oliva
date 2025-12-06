@@ -3,6 +3,7 @@ import cors from 'cors';
 import db from './db/database.js'; // DB
 import peliculasRoutes from './routes/peliculasRoutes.js';
 import requestLogger from './middlewares/requestLogger.js';
+import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
 const port = 3000;
@@ -21,6 +22,9 @@ app.use('/peliculas', peliculasRoutes);
 app.use((req, res, next) => {
     res.status(404).json({ error: 'Ruta no encontrada' });
 });
+
+// Manejo centralizado de errores
+app.use(errorHandler);
 
 // Iniciar servidor
 app.listen(port, () => {

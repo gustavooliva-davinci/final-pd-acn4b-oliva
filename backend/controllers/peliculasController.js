@@ -1,41 +1,52 @@
 import db from '../db/database.js'; 
 
 // GET: todas las peliculasa
-const obtenerPeliculas = async (req, res) => {
+export const obtenerPeliculas = (req, res, next) => {
     const sql = 'SELECT * FROM peliculas';
     
     db.all(sql, [], (err, rows) => {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return next(err); // Middleware de manejo de errores
         }
         res.json(rows);
     });
 };
 
 // GET: pelicula por id
-const obtenerPeliculaPorId = async (req, res) => {
+export const obtenerPeliculaPorId = (req, res, next) => {
     const { id } = req.params;
     const sql = 'SELECT * FROM peliculas WHERE id = ?';
 
     db.get(sql, [id], (err, row) => {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return next(err); // Middleware de manejo de errores
         }
         if (!row) {
-            return res.status(404).json({ error: "Película no encontrada" });
+            const error = new Error(`Pelicula con ID ${id} no encontrada.`);
+            error.statusCode = 404;
+            return next(error);
         }
         res.json(row);
     });
 };
 
 // POST: agregar pelicula
-const agregarPelicula = async (req, res) => {
+export const agregarPelicula = (req, res, next) => {
     const { titulo, descripcion, anio, genero, imagen } = req.body;
-    const sql = `INSERT INTO peliculas (titulo, descripcion, anio, genero, imagen) VALUES (?, ?, ?, ?, ?)`;
 
-    db.run(sql, [titulo, descripcion, anio, genero, imagen], function(err) {
+    // validacion
+    if (!titulo || !anio) {
+        const error = new Error('El título y el año son campos obligatorios.');
+        error.statusCode = 400;
+        return next(error);
+    }
+
+    const sql = `INSERT INTO peliculas (titulo, descripcion, anio, genero, imagen) VALUES (?, ?, ?, ?, ?)`;
+    const values = [titulo, descripcion, anio, genero, imagen || '/imagenes/default.jpg'];
+
+    db.run(sql, values, function(err) {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return next(err);
         }
         res.status(201).json({
             id: this.lastID,
@@ -49,46 +60,42 @@ const agregarPelicula = async (req, res) => {
 };
 
 // PUT: Actualizar / editar
-const actualizarPelicula = async (req, res) => {
+export const actualizarPelicula = (req, res, next) => {
     const { id } = req.params;
     const { titulo, descripcion, anio, genero, imagen } = req.body;
     
     const sql = `UPDATE peliculas SET titulo = ?, descripcion = ?, anio = ?, genero = ?, imagen = ? WHERE id = ?`;
+    const values = [titulo, descripcion, anio, genero, imagen, id];
 
-    db.run(sql, [titulo, descripcion, anio, genero, imagen, id], function(err) {
+    db.run(sql, values, function(err) {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return next(err);
         }
         if (this.changes === 0) {
-            return res.status(404).json({ error: "Película no encontrada para actualizar" });
+            const error = new Error(`Pelicula con ID ${id} no encontrada para actualizar.`);
+            error.statusCode = 404;
+            return next(error);
         }
         res.json({ 
-            mensaje: "Película actualizada", 
-            pelicula: { id, titulo, descripcion, anio, genero, imagen } 
+            pelicula: { id: parseInt(id), titulo, descripcion, anio, genero, imagen }
         });
     });
 };
 
 // DELETE: Eliminar
-const eliminarPelicula = async (req, res) => {
+export const eliminarPelicula = (req, res, next) => {
     const { id } = req.params;
     const sql = 'DELETE FROM peliculas WHERE id = ?';
 
-    db.run(sql, [id], function(err) {
+    db.run(sql, id, function(err) {
         if (err) {
-            return res.status(500).json({ error: err.message });
+            return next(error);
         }
         if (this.changes === 0) {
-            return res.status(404).json({ error: "Película no encontrada para eliminar" });
+            const error = new Error(`Pelicula con ID ${id} no encontrada para eliminar.`);
+            error.statusCode = 404;
+            return next(error);
         }
-        res.json({ mensaje: "Película eliminada correctamente", exito: true });
+        res.status(204).send();
     });
-};
-
-export {
-    obtenerPeliculas,
-    obtenerPeliculaPorId,
-    agregarPelicula,
-    actualizarPelicula,
-    eliminarPelicula
 };
