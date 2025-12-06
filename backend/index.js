@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import db from './db/database.js'; // DB
 import peliculasRoutes from './routes/peliculasRoutes.js';
+import requestLogger from './middlewares/requestLogger.js';
 
 const app = express();
 const port = 3000;
@@ -9,6 +10,9 @@ const port = 3000;
 // Configuracion de middlewares
 app.use(cors());
 app.use(express.json());
+
+// middleware propio
+app.use(requestLogger);
 
 // Rutas
 app.use('/peliculas', peliculasRoutes);
