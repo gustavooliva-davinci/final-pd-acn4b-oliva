@@ -2,7 +2,7 @@ import { useState } from 'react';
 import ReactDom from 'react-dom';
 import '../../src/styles/modal.css';
 
-const PRECIO_BASE = 800;
+const PRECIO_BASE = 16000;
 const HORARIOS = ["18:00", "20:30", "22:45"];
 
 function ReservaModal({ pelicula, isOpen, onClose }) {
