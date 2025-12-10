@@ -135,17 +135,6 @@ function CineList() {
                 <button type="submit">Agregar Pelicula</button>
             </form>
 
-            {/* Formulario EDITAR */}
-            {peliculaEditar && (
-                <CineEditForm 
-                    peliculaEditar={peliculaEditar}
-                    setPeliculaEditar={setPeliculaEditar}
-                    actualizarPelicula={actualizarPelicula} 
-                    setMensajeExito={setMensajeExito}
-                    setMensajeError={setMensajeError}
-                />
-            )}
-
             {/* Listado */}
             {cargando ? (
                 <p>Cargando películas...</p>
@@ -161,9 +150,10 @@ function CineList() {
                                 <button className="delete-btn" onClick={() => handleEliminarPelicula(parseInt(peli.id))} >
                                     Eliminar
                                 </button>
+                                {/* 
                                 <button className="edit-btn" onClick={() => seleccionarPelicula(peli)}>
                                     Editar
-                                </button>
+                                </button> */}
                                 <Link to={`/cine/${peli.id}`} className="volver-btn">
                                     Ver Detalle
                                 </Link>

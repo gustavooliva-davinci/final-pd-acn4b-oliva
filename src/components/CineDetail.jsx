@@ -75,26 +75,35 @@ function CineDetail() {
                 <p>{pelicula.descripcion}</p>
 
                 <br />
-                <button className="edit-btn" onClick={() => navigate("/")} style={{ marginRight: '10px' }}>
-                    Editar pelicula
-                </button>
-
-                <button className="delete-btn" onClick={handleEliminarPelicula} style={{ background: "red", color: "white" }}>
-                    Eliminar pelicula
-                </button>
                 
-                <button type="button" onClick={abrirModal} className="neon-submit-btn">
-                    Reservar Entradas
-                </button>
-            
+                {/* Reservar entradas */}
+                <div className="action-group" style={{ marginBottom: '20px' }}>
+                    <button type="button" onClick={abrirModal} className="neon-submit-btn" style={{ fontSize: '1.2rem', padding: '12px 25px' }}>
+                        Reservar Entradas
+                    </button>
+                </div>
+
+                {/* Gestion */}
+                <div className="action-group" style={{ marginBottom: '30px' }}>
+                    <button className="edit-btn" onClick={() => navigate(`/editar/${pelicula.id}`)} style={{ marginRight: '15px' }}>
+                        Editar pelicula
+                    </button>
+                    <button className="delete-btn" onClick={handleEliminarPelicula} style={{ background: "#8B0000", color: "white" }}>
+                        Eliminar pelicula
+                    </button>
+                </div>
+
                 <ReservaModal
                     pelicula={pelicula}
                     isOpen={modalAbierto}
                     onClose={cerrarModal}
                 />
+    
+                {/* Fin */}
+                <Link to="/" className="volver-btn">
+                    Volver al Listado
+                </Link>
 
-                <br />
-                <Link to="/" className="volver-btn">Volver</Link>
             </div>
         </div>
     );

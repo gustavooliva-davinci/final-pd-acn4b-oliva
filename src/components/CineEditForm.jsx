@@ -1,108 +1,147 @@
-import React, { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { usePeliculas } from '../hooks/usePeliculas.js';
+import { Link } from 'react-router-dom';
+import "../styles/cine.css";
 
-function CineEditForm({ 
-    peliculaEditar, 
-    actualizarPelicula, 
-    setPeliculaEditar, 
-    setMensajeExito, 
-    setMensajeError 
-}) {
+function CineEditForm() {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const { obtenerPeliculaPorId, actualizarPelicula } = usePeliculas();
 
-    const [formEdicion, setFormEdicion] = useState(peliculaEditar || {});
+    const [formData, setFormData] = useState({
+        titulo: '',
+        descripcion: '',
+        anio: '',
+        genero: '',
+        imagen: '',
+    });
 
+    const [cargando, setCargando] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Cargar datos
     useEffect(() => {
-        // validacion que no sea null antes de actualizar el estado local
-        if (peliculaEditar) {
-            setFormEdicion(peliculaEditar);
-        }
-    }, [peliculaEditar]);
+        const fetchPelicula = async () => {
+            setCargando(true);
+            const data = await obtenerPeliculaPorId(parseInt(id));
 
-    const handleChangeEdicion = (e) => {
-        const { name, value } = e.target;
-        setFormEdicion(prev => ({
-            ...prev,
-            [name]: value
-        }));
-    };
-
-    // 2. Guardar Edición (PUT)
-    const guardarEdicion = async () => {
-        if (!formEdicion.titulo?.trim() || !formEdicion.imagen?.trim()){
-             setMensajeError("El título y la URL de imagen son obligatorios para guardar la edición.");
-             setTimeout(() => setMensajeError(null), 4000); 
-             return;
-        }
-        setMensajeError(null);
-
-        const datosAEnviar = {
-            titulo: formEdicion.titulo,
-            descripcion: formEdicion.descripcion,
-            imagen: formEdicion.imagen,
-            genero: formEdicion.genero,
-            anio: formEdicion.anio, 
+            if (data) {
+                setFormData(data);
+                setError(null);
+            } else {
+                setError("No se pudo cargar la película para editar.");
+            }
+            setCargando(false);
         };
+        fetchPelicula();
+    }, [id, obtenerPeliculaPorId]);
 
-        const resultado = await actualizarPelicula(formEdicion.id, datosAEnviar);
-        
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    // Manejo de envio (PUT)
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError(null); // Limpiar errores previos
+
+        // funcion de actualizacion del hook
+        const resultado = await actualizarPelicula(parseInt(id), formData);
+
         if (resultado.exito) {
-            setMensajeExito("Película actualizada correctamente.");
-            setTimeout(() => setMensajeExito(null), 4000); 
-            setPeliculaEditar(null); 
+            alert(resultado.mensaje); 
+            navigate(`/detalle/${id}`); // Volver a la vista de detalle
         } else {
-            setMensajeError(resultado.mensaje);
-            setTimeout(() => setMensajeError(null), 4000); 
+            setError(resultado.mensaje); 
+            console.error("Error al actualizar:", resultado.mensaje);
         }
     };
 
-    const cancelarEdicion = () => {
-        setPeliculaEditar(null); // Cierra el formulario 
-    };
-    
-    if (!peliculaEditar) {
-        return null;
-    }
+    if (cargando) return <p className="loading-text">Cargando formulario...</p>;
+    if (error && cargando === false) return <p className="error-text">{error}</p>;
+    if (!formData.titulo) return <p className="error-text">Película no encontrada.</p>;
 
     return (
-        <div className="edit-form" key={formEdicion.id}>
-            <h3>Editar película ID: {formEdicion.id}</h3>
+        <div className="form-container">
+            <h2 className="form-title">Editar Película: {formData.titulo}</h2>
 
-            <input
-                type="text"
-                name="titulo"
-                placeholder="Título"
-                value={formEdicion.titulo || ''}
-                onChange={handleChangeEdicion}
-            />
-            <input
-                type="text"
-                name="genero"
-                placeholder="Género"
-                value={formEdicion.genero || ''}
-                onChange={handleChangeEdicion}
-            />
-            <input
-                type="text"
-                name="anio"
-                placeholder="Año"
-                value={formEdicion.anio || ''} 
-                onChange={handleChangeEdicion}
-            />
-            <input
-                type="text"
-                name="imagen"
-                placeholder="URL de Imagen"
-                value={formEdicion.imagen || ''}
-                onChange={handleChangeEdicion}
-            />
-            <textarea
-                name="descripcion"
-                placeholder="Descripción"
-                value={formEdicion.descripcion || ''}
-                onChange={handleChangeEdicion}
-            />
+            <form onSubmit={handleSubmit} className="cine-form">
+                
+                {/* Mostrar error si existe */}
+                {error && <p className="form-error">{error}</p>} 
 
-            <button onClick={guardarEdicion}>Guardar Cambios</button>
-            <button onClick={cancelarEdicion}>Cancelar</button>
+                {/* Titulo */}
+                <div className="form-group">
+                    <label htmlFor="titulo">Título</label>
+                    <input
+                        type="text"
+                        id="titulo"
+                        name="titulo"
+                        value={formData.titulo}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Descripcion */}
+                <div className="form-group">
+                    <label htmlFor="descripcion">Descripción</label>
+                    <textarea
+                        id="descripcion"
+                        name="descripcion"
+                        value={formData.descripcion || ''}
+                        onChange={handleChange}
+                    />
+                </div>
+                
+                {/* Año */}
+                <div className="form-group">
+                    <label htmlFor="anio">Año</label>
+                    <input
+                        type="number"
+                        id="anio"
+                        name="anio"
+                        value={formData.anio}
+                        onChange={handleChange}
+                        required
+                    />
+                </div>
+
+                {/* Genero */}
+                <div className="form-group">
+                    <label htmlFor="genero">Género</label>
+                    <input
+                        type="text"
+                        id="genero"
+                        name="genero"
+                        value={formData.genero || ''}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                {/* URL Imagen */}
+                <div className="form-group">
+                    <label htmlFor="imagen">URL de la Imagen (Ruta)</label>
+                    <input
+                        type="text"
+                        id="imagen"
+                        name="imagen"
+                        value={formData.imagen || ''}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <div className="form-actions">
+                    <button type="submit" className="neon-submit-btn">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" onClick={() => navigate(-1)} className="neon-close-btn" style={{ marginLeft: '10px' }}>
+                        Cancelar
+                    </button>
+                </div>
+            </form>
         </div>
     );
 }
