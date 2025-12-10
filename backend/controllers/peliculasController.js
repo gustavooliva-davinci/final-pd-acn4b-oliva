@@ -34,13 +34,6 @@ export const obtenerPeliculaPorId = (req, res, next) => {
 export const agregarPelicula = (req, res, next) => {
     const { titulo, descripcion, anio, genero, imagen } = req.body;
 
-    // validacion
-    if (!titulo || !anio) {
-        const error = new Error('El título y el año son campos obligatorios.');
-        error.statusCode = 400;
-        return next(error);
-    }
-
     const sql = `INSERT INTO peliculas (titulo, descripcion, anio, genero, imagen) VALUES (?, ?, ?, ?, ?)`;
     const values = [titulo, descripcion, anio, genero, imagen || '/imagenes/default.jpg'];
 
