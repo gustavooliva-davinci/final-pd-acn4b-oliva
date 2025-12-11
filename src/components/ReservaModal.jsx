@@ -18,7 +18,7 @@ function ReservaModal({ pelicula, isOpen, onClose }) {
     e.preventDefault();
     // Simulacion de Reserva 
     alert(`
-      ✅ ¡Reserva Exitosa!
+      ¡Reserva Exitosa!
       Película: ${pelicula.titulo}
       Horario: ${horario}
       Entradas: ${cantidad}

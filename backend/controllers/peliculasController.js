@@ -82,7 +82,7 @@ export const eliminarPelicula = (req, res, next) => {
 
     db.run(sql, id, function(err) {
         if (err) {
-            return next(error);
+            return next(err);
         }
         if (this.changes === 0) {
             const error = new Error(`Pelicula con ID ${id} no encontrada para eliminar.`);

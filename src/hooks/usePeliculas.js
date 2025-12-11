@@ -54,7 +54,11 @@ export const usePeliculas = () => {
             const data = await res.json();
             
             if (!res.ok) {
-                 throw new Error(data.error || res.statusText);
+                return { 
+                    exito: false, 
+                    mensaje: data.error || 'Error en la creación.',
+                    errors: data.errors || []
+                };
             }
 
             setPeliculas(prev => [...prev, data]); 
@@ -62,7 +66,7 @@ export const usePeliculas = () => {
 
         } catch (error) {
             console.error("Error al agregar película:", error);
-            return { exito: false, mensaje: error.message || "Error al agregar la película." };
+            return { exito: false, mensaje: "Fallo la conexión o el servidor.", errors: [] };
         }
     }, []);
     
@@ -75,7 +79,11 @@ export const usePeliculas = () => {
             
             if (!res.ok) {
                 const data = await res.json();
-                throw new Error(data.error || res.statusText);
+                return { 
+                    exito: false, 
+                    mensaje: data.error || 'Error al eliminar la película.',
+                    errors: data.errors || [] 
+                };
             }
 
             setPeliculas(prev => prev.filter(p => p.id !== id));
@@ -83,11 +91,11 @@ export const usePeliculas = () => {
 
         } catch (error) {
             console.error("Error al eliminar película:", error);
-            return { exito: false, mensaje: error.message || "Error al eliminar la película." };
+            return { exito: false, mensaje: "Fallo de conexión con el servidor.", errors: [] };
         }
     }, []);
     
-    // --- 5. PUT (Actualizar) ---
+    // PUT (Actualizar) ---
     const actualizarPelicula = useCallback( async (id, peliculaActualizada) => {
         try {
             const res = await fetch(`${API_URL}/${id}`, { 
@@ -96,24 +104,38 @@ export const usePeliculas = () => {
                 body: JSON.stringify(peliculaActualizada)
             });
 
-            const data = await res.json();
-
             if (!res.ok) {
-                 throw new Error(data.error || res.statusText);
+                const errorData = await res.json();
+                // lanza error para capturarlo
+                return {
+                    exito: false,
+                    mensaje: errorData.error || 'Error en la actualización.',
+                    errors: errorData.errors || [] 
+                };
             }
-            
+
+            const data = await res.json();
+            const peliculaResultante = data.pelicula || data;
+
             // Reemplaza la pelicula en el estado local
-            setPeliculas(prev => prev.map(p => 
-                p.id === id ? data.pelicula : p 
-            ));
+            setPeliculas(prevPeliculas => 
+                prevPeliculas.map(p => p.id === id ? peliculaResultante : p)
+            );
             
-            return { exito: true, mensaje: "Película actualizada correctamente." };
+            return { 
+                exito: true,
+                mensaje: `Película ${peliculaResultante.titulo} actualizada correctamente.`,
+                pelicula: peliculaResultante
+             };
 
         } catch (error) { 
-            console.error("Error al actualizar película:", error);
-            return { exito: false, mensaje: error.message || "Error al actualizar la película." };
+            console.error("Fallo de red o JSON inválido en la actualización:", error);
+            return { 
+                exito: false, 
+                mensaje: "Fallo la conexión con la API o el formato de respuesta del servidor es incorrecto."
+            };
         }
-    }, []);
+    }, [setPeliculas]);
 
 
     useEffect(() => {

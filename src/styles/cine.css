@@ -200,3 +200,20 @@ input:focus, textarea:focus {
     margin: 0;
     text-align: center;
 }
+
+/* Inputs con error */
+.cine-form input.input-error,
+.cine-form textarea.input-error {
+    border-color: #ff0f2f !important;
+    box-shadow: 0 0 8px rgba(255, 15, 47, 0.7) !important;
+}
+
+/* mensajes de validacion */
+.validation-message-error {
+    color: #ff0f2f; 
+    font-size: 0.85rem;
+    margin-top: 5px;
+    margin-bottom: 0;
+    padding-left: 5px;
+    text-shadow: 0 0 3px rgba(255, 15, 47, 0.5); 
+}
